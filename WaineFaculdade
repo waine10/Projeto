@@ -1,0 +1,1111 @@
+CONTROLLER
+
+package controller;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+
+import javax.swing.JOptionPane;
+
+import dao.Conexao;
+import dao.FornecedorDAO;
+import model.Fornecedor;
+import view.MenuFornecedor;
+import view.CadastroFornecedor;
+
+public class FormCadastroFornecedorController {
+	
+	private MenuFornecedor view;
+	
+	public FormCadastroFornecedorController(MenuFornecedor view) {
+		this.view = view;
+	}
+	
+public void deletaFornecedor() {
+		
+		String cnpj = view.getTxtcnpj().getText();	
+		
+		Fornecedor Fornecedor = new Fornecedor (null, cnpj, null, null);
+		
+		try {
+		Connection conexao = new Conexao().getConnection();
+		FornecedorDAO fornecedorDao = new FornecedorDAO(conexao);
+		fornecedorDao.delete(Fornecedor);
+		JOptionPane.showMessageDialog(null, "Fornecedor deletado com sucesso!");
+		}
+		
+		catch (SQLException e1) {
+		e1.printStackTrace();
+		}
+	}
+
+}
+
+package controller;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+
+import javax.swing.JOptionPane;
+
+import dao.Conexao;
+import dao.UsuarioDAO;
+import model.Usuario;
+import view.CadastroLogin;
+
+public class FormCadastroUsuarioController {
+	
+	private CadastroLogin view;
+	
+	public FormCadastroUsuarioController(CadastroLogin view) {
+		this.view = view;
+		
+	}
+	public void salvaUsuario() {
+	
+		String usuario = view.getTxtUsuario().getText();
+		String senha = view.getTxtSenha().getText();	
+		
+		Usuario Usuario = new Usuario (usuario,senha);
+		
+		try {
+			Connection conexao = new Conexao().getConnection();
+			UsuarioDAO usuarioDao = new UsuarioDAO(conexao);
+			usuarioDao.insert(Usuario);
+			
+			JOptionPane.showMessageDialog(null, "Usuario cadastrado com sucesso");
+		} catch (SQLException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+	}
+}
+package controller;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+
+import javax.swing.JOptionPane;
+
+import dao.Conexao;
+import dao.FornecedorDAO;
+import model.Fornecedor;
+import view.MenuFornecedor;
+import view.CadastroFornecedor;
+
+public class FornecedorController {
+	
+	private CadastroFornecedor view;
+	
+	public FornecedorController(CadastroFornecedor view) {
+		this.view = view;
+		
+	}
+
+	public void salvaFornecedor() {
+		
+		String nome = view.getTxtNOME().getText();
+		String cnpj = view.getTxtCNPJ().getText();	
+		String telefone = view.getTxtTELEFONE().getText();
+		String endereco = view.getTxtENDERECO().getText();
+		
+		Fornecedor Fornecedor = new Fornecedor (nome, cnpj, telefone, endereco);
+		
+		try {
+		Connection conexao = new Conexao().getConnection();
+		FornecedorDAO fornecedorDao = new FornecedorDAO(conexao);
+		fornecedorDao.insert(Fornecedor);
+		JOptionPane.showMessageDialog(null, "Fornecedor cadastrado com sucesso!");
+		}
+		
+		catch (SQLException e1) {
+		e1.printStackTrace();
+		}
+	}
+}
+package controller;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+
+import javax.swing.JOptionPane;
+
+import dao.Conexao;
+import dao.UsuarioDAO;
+import model.Usuario;
+import view.MenuFornecedor;
+import view.Login;
+
+public class LoginController {
+	
+	private Login view;
+
+	public LoginController(Login view) {
+		this.view = view;
+	}
+
+	public void autenticar() throws SQLException {
+		
+		//Buscar usuario da view
+		
+		String usuario = view.getTxtLOGIN().getText();
+		String senha = view.getTxtSENHA().getText();
+			
+		Usuario usuarioAutenticar = new Usuario(usuario,senha);
+		//Verificar se o usuario existe no banco
+		
+		Connection conexao = new Conexao().getConnection();
+		UsuarioDAO usuarioDao = new UsuarioDAO(conexao);
+		
+		boolean existe = usuarioDao.existePorUsuarioESenha(usuarioAutenticar);
+		//Se existir direciona para o menu
+		
+		if(existe) {
+			MenuFornecedor telaDeMenu = new MenuFornecedor();
+			telaDeMenu.setVisible(true);
+}		else {
+		 	JOptionPane.showMessageDialog(view, "Usuario ou Senha invalido!");
+}	
+	}
+}
+
+
+
+DAO
+
+package dao;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+public class Conexao {
+	
+	public Connection getConnection() throws SQLException {
+		Connection conexao = DriverManager.getConnection("jdbc:mysql://localhost:3306/papelariawc","root","waine10");
+		return conexao;
+	}
+}
+package dao;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import model.Fornecedor;
+
+public class FornecedorDAO {
+	
+	private final Connection connection;
+	
+	ResultSet rs;
+	
+	public FornecedorDAO(Connection connection) {
+		this.connection = connection;		
+}
+	public void insert(Fornecedor fornecedor) throws SQLException {
+		
+		String sql = "insert into fornecedor (nome_fornecedor, cnpj, telefone, endereco) values ('"+fornecedor.getNmfornecedor() +"','"+fornecedor.getCnpj() +"', '"+fornecedor.getTelefone()+"', '"+fornecedor.getEndereco()+"');";
+			PreparedStatement statement = connection.prepareStatement(sql);
+			statement.execute();
+}
+	
+	public Fornecedor consultar(Fornecedor fornecedor) throws SQLException {
+		Fornecedor forncedor = new Fornecedor(0, null, null, null, null);
+		String sql = "select id, nome_fornecedor, cnpj, telefone, endereco from fornecedor where cnpj = '"+fornecedor.getCnpj() +"';";
+		PreparedStatement statement = connection.prepareStatement(sql);
+		statement.execute();
+		ResultSet resultSet = statement.getResultSet();
+		
+		if (resultSet.next()) {
+			fornecedor.setId(resultSet.getInt("id"));
+			fornecedor.setNmfornecedor(resultSet.getString("nome_fornecedor"));
+			fornecedor.setCnpj(resultSet.getString("cnpj"));
+			fornecedor.setTelefone(resultSet.getString("telefone"));
+			fornecedor.setEndereco(resultSet.getString("endereco"));
+			return fornecedor;
+			
+	}else {
+		System.out.println("teste");
+		return null;
+	}
+	
+}
+	
+	public void delete(Fornecedor fornecedor) throws SQLException {
+		
+		String sql = "delete from fornecedor where cnpj = '"+fornecedor.getCnpj() +"';";
+			PreparedStatement statement = connection.prepareStatement(sql);
+			statement.execute();
+}
+}
+package dao;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import model.Usuario;
+
+public class UsuarioDAO {
+
+	private final Connection connection;
+	
+	public UsuarioDAO(Connection connection) {
+		this.connection = connection;		
+}
+	public void insert(Usuario usuario) throws SQLException {
+		
+			String sql = "insert into usuario(usuario,senha) values ('"+usuario.getUsuario() +"','"+usuario.getSenha() +"');";
+			PreparedStatement statement = connection.prepareStatement(sql);
+			statement.execute();	
+}
+	public boolean existePorUsuarioESenha(Usuario usuario) throws SQLException {
+		String sql = "select * from usuario where usuario = '"+usuario.getUsuario() +"' and senha = '"+usuario.getSenha() +"'";
+		PreparedStatement statement = connection.prepareStatement(sql);
+		statement.execute();
+		ResultSet resultSet = statement.getResultSet();
+		
+		return resultSet.next();
+	}			
+}
+
+
+MODEL
+
+package model;
+
+public class Fornecedor {
+	
+	private int id;
+	private String nmfornecedor;
+	private String cnpj;
+	private String telefone;
+	private String endereco;
+		
+	public Fornecedor(int id,String nmfornecedor,String cnpj, String telefone, String endereco) {
+		this.id = id;
+		this.nmfornecedor = nmfornecedor;
+		this.cnpj = cnpj;
+		this.telefone = telefone;
+		this.endereco = endereco;
+	}
+	public Fornecedor(String nmfornecedor,String cnpj, String telefone, String endereco) {
+		this.nmfornecedor = nmfornecedor;
+		this.cnpj = cnpj;
+		this.telefone = telefone;
+		this.endereco = endereco;		
+	}
+	public int getId() {
+		return id;
+	}
+	public void setId(int id) {
+		this.id = id;
+	}
+	public String getNmfornecedor() {
+		return nmfornecedor;
+	}
+	public void setNmfornecedor(String nmfornecedor) {
+		this.nmfornecedor = nmfornecedor;
+	}
+	public String getCnpj() {
+		return cnpj;
+	}
+	public void setCnpj(String cnpj) {
+		this.cnpj = cnpj;
+	}
+	public String getTelefone() {
+		return telefone;
+	}
+	public void setTelefone(String telefone) {
+		this.telefone = telefone;
+	}
+	public String getEndereco() {
+		return endereco;
+	}
+	public void setEndereco(String endereco) {
+		this.endereco = endereco;
+	}
+}
+package model;
+
+public class Usuario {
+
+	private int id;
+	private String usuario;
+	private String senha;
+		
+	public Usuario(int id,String usuario,String senha) {
+		this.id = id;
+		this.usuario = usuario;
+		this.senha = senha;
+	}
+	public Usuario(String usuario,String senha) {
+		this.usuario = usuario;
+		this.senha = senha;
+	}
+	
+	
+	public int getId() {
+		return id;
+	}
+	public void setId(int id) {
+		this.id = id;
+	}
+	public String getUsuario() {
+		return usuario;
+	}
+	public void setUsuario(String usuario) {
+		this.usuario = usuario;
+	}
+	public String getSenha() {
+		return senha;
+	}
+	public void setSenha(String senha) {
+		this.senha = senha;
+	}
+}
+
+
+VIEW 
+
+LOGIN
+
+package view;
+
+import java.awt.BorderLayout;
+import java.awt.EventQueue;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.border.EmptyBorder;
+
+import controller.LoginController;
+
+import javax.swing.JTextField;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+
+import java.awt.Font;
+import javax.swing.JButton;
+import javax.swing.JPasswordField;
+import java.awt.event.ActionListener;
+import java.sql.SQLException;
+import java.awt.event.ActionEvent;
+import javax.swing.ImageIcon;
+import java.awt.Color;
+
+public class Login extends JFrame {
+
+	private JPanel contentPane;
+	private JTextField txtLOGIN;
+	private JPasswordField txtSENHA;
+	private LoginController controller;
+
+	/**
+	 * Launch the application.
+	 */
+	public static void main(String[] args) {
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					Login frame = new Login();
+					frame.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+	
+	
+
+	public JTextField getTxtLOGIN() {
+		return txtLOGIN;
+	}
+
+
+
+	public void setTxtLOGIN(JTextField txtLOGIN) {
+		this.txtLOGIN = txtLOGIN;
+	}
+
+
+
+	public JPasswordField getTxtSENHA() {
+		return txtSENHA;
+	}
+
+
+
+	public void setTxtSENHA(JPasswordField txtSENHA) {
+		this.txtSENHA = txtSENHA;
+	}
+
+
+
+	/**
+	 * Create the frame.
+	 */
+	public Login() {
+		
+		controller = new LoginController(this);
+		
+		
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setBounds(100, 100, 475, 356);
+		contentPane = new JPanel();
+		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+		setContentPane(contentPane);
+		contentPane.setLayout(null);
+		
+		JLabel lbllogin = new JLabel("USU\u00C1RIO");
+		lbllogin.setForeground(Color.BLACK);
+		lbllogin.setFont(new Font("Tahoma", Font.BOLD, 16));
+		lbllogin.setBounds(171, 77, 89, 20);
+		contentPane.add(lbllogin);
+		
+		txtLOGIN = new JTextField();
+		txtLOGIN.setBounds(120, 108, 194, 20);
+		contentPane.add(txtLOGIN);
+		txtLOGIN.setColumns(10);
+		
+		JLabel lblsenha = new JLabel("SENHA");
+		lblsenha.setForeground(Color.BLACK);
+		lblsenha.setFont(new Font("Tahoma", Font.BOLD, 16));
+		lblsenha.setBounds(182, 145, 59, 14);
+		contentPane.add(lblsenha);
+		
+		txtSENHA = new JPasswordField();
+		txtSENHA.setBounds(120, 170, 194, 20);
+		contentPane.add(txtSENHA);
+		
+		JButton btnEntrar = new JButton("Entrar");
+		btnEntrar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+			
+			try {
+				controller.autenticar();
+			} catch (SQLException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			
+				
+		
+				
+			}
+		});
+		btnEntrar.setBounds(158, 201, 102, 31);
+		contentPane.add(btnEntrar);
+		
+		JButton btnCADASTRAR = new JButton("Cadastrar");
+		btnCADASTRAR.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+			
+			CadastroLogin telaDeCadastro = new CadastroLogin();
+			telaDeCadastro.setVisible(true);
+				
+			}
+		});
+		btnCADASTRAR.setBounds(158, 243, 102, 31);
+		contentPane.add(btnCADASTRAR);
+	}
+	
+	public boolean checklogin(String login, String senha) {
+		return login.equals("usuario") && senha.equals("123");
+	
+	}
+}
+
+CADASTRO LOGIN
+
+package view;
+
+import java.awt.BorderLayout;
+import java.awt.EventQueue;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.border.EmptyBorder;
+
+import controller.FormCadastroUsuarioController;
+import dao.Conexao;
+import dao.UsuarioDAO;
+import model.Usuario;
+
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JTextField;
+import javax.swing.JButton;
+import javax.swing.JPasswordField;
+import java.awt.event.ActionListener;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.awt.event.ActionEvent;
+
+public class CadastroLogin extends JFrame {
+
+	private JPanel contentPane;
+	private JTextField txtId;
+	private JTextField txtUsuario;
+	private JPasswordField TxtSenha;
+	private JButton btnNewButton_1;
+	private JButton btnNewButton;
+	private FormCadastroUsuarioController controller;
+
+	/**
+	 * Launch the application.
+	 */
+	public static void main(String[] args) {
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					CadastroLogin frame = new CadastroLogin();
+					frame.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+	
+	
+
+	public JTextField getTxtId() {
+		return txtId;
+	}
+
+
+
+	public void setTxtId(JTextField txtId) {
+		this.txtId = txtId;
+	}
+
+
+
+	public JTextField getTxtUsuario() {
+		return txtUsuario;
+	}
+
+
+
+	public void setTxtUsuario(JTextField txtUsuario) {
+		this.txtUsuario = txtUsuario;
+	}
+
+
+
+	public JPasswordField getTxtSenha() {
+		return TxtSenha;
+	}
+
+
+
+	public void setTxtSenha(JPasswordField txtSenha) {
+		this.TxtSenha = txtSenha;
+	}
+
+
+
+	/**
+	 * Create the frame.
+	 */
+	public CadastroLogin() {
+		controller = new FormCadastroUsuarioController(this);
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setBounds(100, 100, 450, 300);
+		contentPane = new JPanel();
+		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+		setContentPane(contentPane);
+		contentPane.setLayout(null);
+		
+		JLabel lblNewLabel = new JLabel("ID");
+		lblNewLabel.setBounds(185, 28, 31, 14);
+		contentPane.add(lblNewLabel);
+		
+		JLabel lblNewLabel_1 = new JLabel("USUARIO");
+		lblNewLabel_1.setBounds(170, 80, 70, 14);
+		contentPane.add(lblNewLabel_1);
+		
+		JLabel lblNewLabel_2 = new JLabel("SENHA");
+		lblNewLabel_2.setBounds(170, 136, 46, 14);
+		contentPane.add(lblNewLabel_2);
+		
+		txtId = new JTextField();
+		txtId.setBounds(165, 49, 51, 20);
+		contentPane.add(txtId);
+		txtId.setColumns(10);
+		
+		txtUsuario = new JTextField();
+		txtUsuario.setBounds(128, 105, 136, 20);
+		contentPane.add(txtUsuario);
+		txtUsuario.setColumns(10);
+		
+		TxtSenha = new JPasswordField();
+		TxtSenha.setBounds(128, 161, 136, 17);
+		contentPane.add(TxtSenha);
+		
+		btnNewButton_1 = new JButton("Cancelar");
+		btnNewButton_1.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				Login voltaTelaLogin = new Login();
+				voltaTelaLogin.setVisible(true);
+				
+			}
+		});
+		btnNewButton_1.setBounds(139, 223, 110, 23);
+		contentPane.add(btnNewButton_1);
+		
+		btnNewButton = new JButton("Salvar");
+		btnNewButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+			controller.salvaUsuario();
+			
+				
+			}
+		});
+		btnNewButton.setBounds(151, 189, 89, 23);
+		contentPane.add(btnNewButton);
+	}
+}
+	
+
+MENU FORNECEDOR
+
+package view;
+
+import java.awt.BorderLayout;
+import java.awt.EventQueue;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.border.EmptyBorder;
+import javax.swing.JList;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
+
+import controller.FormCadastroFornecedorController;
+import controller.FornecedorController;
+import dao.Conexao;
+import dao.FornecedorDAO;
+import model.Fornecedor;
+
+import javax.swing.ListSelectionModel;
+import javax.swing.JEditorPane;
+import javax.swing.JTextArea;
+import javax.swing.DropMode;
+import javax.swing.JLabel;
+import javax.swing.JTextField;
+import javax.swing.JButton;
+import java.awt.Font;
+import javax.swing.border.BevelBorder;
+import java.awt.Color;
+import java.awt.event.ActionListener;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.awt.event.ActionEvent;
+
+public class MenuFornecedor extends JFrame {
+
+	private JPanel contentPane;
+	private JTextField txtcnpj;
+	private JTextField txtrazaosocial;
+	private JTextField txtendereco;
+	private JTextField txtid;
+	private JTextField txttelefone;
+	private FormCadastroFornecedorController controller;
+
+	/**
+	 * Launch the application.
+	 */
+	public static void main(String[] args) {
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					MenuFornecedor frame = new MenuFornecedor();
+					frame.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+	
+	
+
+	public JTextField getTxtcnpj() {
+		return txtcnpj;
+	}
+
+
+
+	public void setTxtcnpj(JTextField txtcnpj) {
+		this.txtcnpj = txtcnpj;
+	}
+
+
+
+	public JTextField getTxtrazaosocial() {
+		return txtrazaosocial;
+	}
+
+
+
+	public void setTxtrazaosocial(JTextField txtrazaosocial) {
+		this.txtrazaosocial = txtrazaosocial;
+	}
+
+
+
+	public JTextField getTxtendereco() {
+		return txtendereco;
+	}
+
+
+
+	public void setTxtendereco(JTextField txtendereco) {
+		this.txtendereco = txtendereco;
+	}
+
+
+
+	public JTextField getTxtid() {
+		return txtid;
+	}
+
+
+
+	public void setTxtid(JTextField txtid) {
+		this.txtid = txtid;
+	}
+
+
+
+	public JTextField getTxttelefone() {
+		return txttelefone;
+	}
+
+
+
+	public void setTxttelefone(JTextField txttelefone) {
+		this.txttelefone = txttelefone;
+	}
+
+
+
+	/**
+	 * Create the frame.
+	 */
+	public MenuFornecedor() {
+		controller = new FormCadastroFornecedorController(this);
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setBounds(100, 100, 450, 300);
+		contentPane = new JPanel();
+		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+		setContentPane(contentPane);
+		contentPane.setLayout(null);
+		
+		JLabel lblCNPJ = new JLabel("CNPJ");
+		lblCNPJ.setFont(new Font("Tahoma", Font.BOLD, 13));
+		lblCNPJ.setBounds(24, 10, 46, 14);
+		contentPane.add(lblCNPJ);
+		
+		txtcnpj = new JTextField();
+		txtcnpj.setBounds(66, 8, 298, 20);
+		contentPane.add(txtcnpj);
+		txtcnpj.setColumns(10);
+		
+		JButton btnBUSCAR = new JButton("Buscar");
+		btnBUSCAR.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				String cnpj;
+				cnpj = txtcnpj.getText();
+				
+				Fornecedor fornecedor = new Fornecedor(null, cnpj, null, null);
+
+				try {
+					Connection conexao = new Conexao().getConnection();
+					FornecedorDAO fornecedorDao = new FornecedorDAO(conexao);
+					fornecedorDao.consultar(fornecedor);
+					
+					
+				txtrazaosocial.setText(fornecedor.getNmfornecedor());
+				txtcnpj.setText(fornecedor.getCnpj());
+				txtendereco.setText(fornecedor.getEndereco());
+				txtid.setText(String.valueOf(fornecedor.getId()));
+				txttelefone.setText(fornecedor.getTelefone());
+					
+					
+				} catch (SQLException e1) {
+					
+					e1.printStackTrace();
+				}
+				
+				
+				
+			}
+		});
+		btnBUSCAR.setBounds(293, 39, 89, 23);
+		contentPane.add(btnBUSCAR);
+		
+		JButton btnLIMPAR = new JButton("Limpar");
+		btnLIMPAR.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				txtrazaosocial.setText("");
+				txtcnpj.setText("");
+				txtendereco.setText("");
+				txtid.setText("");
+				txttelefone.setText("");
+				
+			}
+		});
+		btnLIMPAR.setBounds(109, 227, 89, 23);
+		contentPane.add(btnLIMPAR);
+		
+		JButton btnCadastrar = new JButton("Cadastrar");
+		btnCadastrar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				CadastroFornecedor cadastroFornecedor = new CadastroFornecedor();
+				cadastroFornecedor.setVisible(true);
+			}
+		});
+		btnCadastrar.setBounds(208, 227, 104, 23);
+		contentPane.add(btnCadastrar);
+		
+		JButton btnNewButton_4 = new JButton("Sair");
+		btnNewButton_4.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				System.exit(1);
+				
+				
+			}
+		});
+		btnNewButton_4.setBounds(322, 227, 89, 23);
+		contentPane.add(btnNewButton_4);
+		
+		JLabel lblNewLabel = new JLabel("Raz\u00E3o Social");
+		lblNewLabel.setBounds(24, 76, 89, 14);
+		contentPane.add(lblNewLabel);
+		
+		txtrazaosocial = new JTextField();
+		txtrazaosocial.setBounds(103, 73, 304, 20);
+		contentPane.add(txtrazaosocial);
+		txtrazaosocial.setColumns(10);
+		
+		
+		JLabel lblNewLabel_1 = new JLabel("Endere\u00E7o");
+		lblNewLabel_1.setBounds(24, 120, 60, 14);
+		contentPane.add(lblNewLabel_1);
+		
+		txtendereco = new JTextField();
+		txtendereco.setBounds(83, 117, 317, 20);
+		contentPane.add(txtendereco);
+		txtendereco.setColumns(10);
+		
+		JLabel lblid = new JLabel("Id");
+		lblid.setBounds(24, 166, 46, 14);
+		contentPane.add(lblid);
+		
+		txtid = new JTextField();
+		txtid.setBounds(66, 163, 131, 20);
+		contentPane.add(txtid);
+		txtid.setColumns(10);
+		
+		JLabel lblNewLabel_3 = new JLabel("Telefone");
+		lblNewLabel_3.setBounds(207, 166, 60, 14);
+		contentPane.add(lblNewLabel_3);
+		
+		txttelefone = new JTextField();
+		txttelefone.setBounds(268, 163, 126, 20);
+		contentPane.add(txttelefone);
+		txttelefone.setColumns(10);
+		
+		JButton btnEXCLUIR = new JButton("Excluir");
+		btnEXCLUIR.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				controller.deletaFornecedor();
+				
+			}
+		});
+		btnEXCLUIR.setBounds(10, 227, 89, 23);
+		contentPane.add(btnEXCLUIR);
+	}
+}
+
+CADASTRO FORNECEDOR
+
+package view;
+
+import java.awt.BorderLayout;
+import java.awt.EventQueue;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.border.EmptyBorder;
+
+import controller.FormCadastroUsuarioController;
+import controller.FornecedorController;
+
+import javax.swing.JLabel;
+import javax.swing.JTextField;
+import javax.swing.JButton;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.sql.SQLException;
+
+public class CadastroFornecedor extends JFrame {
+
+	private JPanel contentPane;
+	private JTextField txtNOME;
+	private JTextField txtCNPJ;
+	private JTextField txtTELEFONE;
+	private JTextField txtENDERECO;
+	private FornecedorController controller;
+
+	/**
+	 * Launch the application.
+	 */
+	public static void main(String[] args) {
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					CadastroFornecedor frame = new CadastroFornecedor();
+					frame.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+	
+	
+
+	public JTextField getTxtNOME() {
+		return txtNOME;
+	}
+
+
+
+	public void setTxtNOME(JTextField txtNOME) {
+		this.txtNOME = txtNOME;
+	}
+
+
+
+	public JTextField getTxtCNPJ() {
+		return txtCNPJ;
+	}
+
+
+
+	public void setTxtCNPJ(JTextField txtCNPJ) {
+		this.txtCNPJ = txtCNPJ;
+	}
+
+
+
+	public JTextField getTxtTELEFONE() {
+		return txtTELEFONE;
+	}
+
+
+
+	public void setTxtTELEFONE(JTextField txtTELEFONE) {
+		this.txtTELEFONE = txtTELEFONE;
+	}
+
+
+
+	public JTextField getTxtENDERECO() {
+		return txtENDERECO;
+	}
+
+
+
+	public void setTxtENDERECO(JTextField txtENDERECO) {
+		this.txtENDERECO = txtENDERECO;
+	}
+
+
+
+	/**
+	 * Create the frame.
+	 */
+	public CadastroFornecedor() {
+		controller = new FornecedorController(this);
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setBounds(100, 100, 450, 300);
+		contentPane = new JPanel();
+		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+		setContentPane(contentPane);
+		contentPane.setLayout(null);
+		
+		JLabel lblnmfornecedor = new JLabel("Nome do Fornecedor");
+		lblnmfornecedor.setBounds(10, 11, 138, 14);
+		contentPane.add(lblnmfornecedor);
+		
+		txtNOME = new JTextField();
+		txtNOME.setBounds(137, 8, 207, 20);
+		contentPane.add(txtNOME);
+		txtNOME.setColumns(10);
+		
+		JLabel lblcnpj = new JLabel("CNPJ");
+		lblcnpj.setBounds(10, 52, 37, 14);
+		contentPane.add(lblcnpj);
+		
+		txtCNPJ = new JTextField();
+		txtCNPJ.setBounds(49, 49, 131, 20);
+		contentPane.add(txtCNPJ);
+		txtCNPJ.setColumns(10);
+		
+		JLabel lbltelefone = new JLabel("Telefone");
+		lbltelefone.setBounds(190, 52, 63, 14);
+		contentPane.add(lbltelefone);
+		
+		txtTELEFONE = new JTextField();
+		txtTELEFONE.setBounds(250, 49, 131, 20);
+		contentPane.add(txtTELEFONE);
+		txtTELEFONE.setColumns(10);
+		
+		JLabel lblendereço = new JLabel("Endere\u00E7o");
+		lblendereço.setBounds(10, 99, 59, 14);
+		contentPane.add(lblendereço);
+		
+		txtENDERECO = new JTextField();
+		txtENDERECO.setBounds(79, 96, 315, 20);
+		contentPane.add(txtENDERECO);
+		txtENDERECO.setColumns(10);
+		
+		JButton btnCancelar = new JButton("Cancelar");
+		btnCancelar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				MenuFornecedor voltaTelaMenu = new MenuFornecedor();
+				voltaTelaMenu.setVisible(true);
+			}
+		});
+		btnCancelar.setBounds(335, 227, 89, 23);
+		contentPane.add(btnCancelar);
+		
+		JButton btnSalvar = new JButton("Salvar");
+		btnSalvar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+		    controller.salvaFornecedor();
+			
+						
+			}
+		});
+		btnSalvar.setBounds(10, 227, 89, 23);
+		contentPane.add(btnSalvar);
+	}
+}
